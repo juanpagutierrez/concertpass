@@ -62,7 +62,7 @@ cd scripts
 |---|---|
 | `create-dynamodb.sh` | Tabla `concertpass-events` (llave `concert_id`) y precarga 3 conciertos |
 | `create-sqs.sh` | Cola `concertpass-reservations.fifo` (+ DLQ FIFO) |
-| `create-cluster.sh` | Cluster EKS con 2 nodos `t3.medium` (`eksctl`) y kubeconfig. El rol de los nodos recibe permisos solo para esa cola y esa tabla. |
+| `create-cluster.sh` | Cluster EKS con 2 nodos `t3.medium` (`eksctl`) y kubeconfig. En una cuenta normal, el rol de los nodos recibe permisos solo para esa cola y esa tabla; en AWS Academy se usa `LabRole`. |
 | `create-rds.sh` | PostgreSQL privado en la VPC del cluster, su security group (5432 solo desde la VPC) y el secreto `concertpass/rds-credentials` en **Secrets Manager** |
 | `create-ecr.sh` | 3 repositorios ECR, build `linux/amd64` y push de las imágenes |
 | `deploy-k8s.sh` | Lee el secreto de Secrets Manager → `Secret` de k8s, aplica ConfigMap y manifiestos, abre el NodePort a tu IP y prueba `/health` |
