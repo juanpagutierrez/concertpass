@@ -1,0 +1,13 @@
+{
+  "concert_id": {"S": "jazz-nicho-cdmx"},
+  "name":       {"S": "Cuarteto Nocturno - Jazz en vivo"},
+  "date":       {"S": "2026-12-05"},
+  "recinto":    {"S": "Foro Lindbergh, CDMX"},
+  "capacity": {
+    "M": {
+      "floor":   {"N": "30"},
+      "vip":     {"N": "10"},
+      "general": {"N": "60"}
+    }
+  }
+}

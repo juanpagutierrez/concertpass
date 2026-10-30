@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ticket-checkout
+  namespace: concertpass
+  labels:
+    app: ticket-checkout
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ticket-checkout
+  template:
+    metadata:
+      labels:
+        app: ticket-checkout
+    spec:
+      containers:
+        - name: ticket-checkout
+          image: ${ECR_REGISTRY}/concertpass/ticket-checkout:${IMAGE_TAG}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: concertpass-config
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi

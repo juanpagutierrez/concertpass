@@ -1,0 +1,13 @@
+{
+  "concert_id": {"S": "indie-fest-mty"},
+  "name":       {"S": "Indie Fest Monterrey"},
+  "date":       {"S": "2027-01-20"},
+  "recinto":    {"S": "Parque Fundidora, MTY"},
+  "capacity": {
+    "M": {
+      "floor":   {"N": "20"},
+      "vip":     {"N": "5"},
+      "general": {"N": "40"}
+    }
+  }
+}

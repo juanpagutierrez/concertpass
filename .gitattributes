@@ -1,0 +1,4 @@
+# Los scripts deben tener finales de línea LF aunque se clonen en Windows.
+* text=auto
+*.sh text eol=lf
+Dockerfile text eol=lf

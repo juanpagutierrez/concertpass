@@ -1,0 +1,90 @@
+# Entorno local para desarrollar y probar sin AWS: PostgreSQL real + emuladores de SQS (ElasticMQ)
+# y DynamoDB (DynamoDB Local). Los servicios usan exactamente el mismo código que en EKS;
+# solo cambian las variables de entorno (AWS_ENDPOINT_URL_* apunta a los emuladores).
+#
+#   docker compose -f docker-compose.local.yml up --build --scale ticket-worker=3
+#   API_URL=http://localhost:8080 AWS_ENDPOINT_URL_DYNAMODB=http://localhost:8001 \
+#     AWS_ACCESS_KEY_ID=local AWS_SECRET_ACCESS_KEY=local ./scripts/test-high-demand.sh
+
+x-aws-local: &aws-local
+  AWS_REGION: us-east-1
+  AWS_ACCESS_KEY_ID: local
+  AWS_SECRET_ACCESS_KEY: local
+  AWS_ENDPOINT_URL_SQS: http://elasticmq:9324
+  AWS_ENDPOINT_URL_DYNAMODB: http://dynamodb:8000
+  SQS_QUEUE_URL: http://elasticmq:9324/000000000000/concertpass-reservations.fifo
+  DYNAMODB_TABLE: concertpass-events
+
+x-db: &db
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_NAME: concertpass
+  DB_USER: concertpass
+  DB_PASSWORD: local-password
+  DB_SSLMODE: disable
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: concertpass
+      POSTGRES_USER: concertpass
+      POSTGRES_PASSWORD: local-password
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U concertpass"]
+      interval: 2s
+      retries: 30
+
+  elasticmq:
+    image: softwaremill/elasticmq-native:1.6.11
+    ports: ["9324:9324"]
+
+  dynamodb:
+    image: amazon/dynamodb-local:2.5.4
+    command: ["-jar", "DynamoDBLocal.jar", "-inMemory", "-sharedDb"]
+    ports: ["8001:8000"]
+
+  # Crea la cola FIFO y la tabla, y precarga los conciertos (mismos JSON que usa create-dynamodb.sh).
+  init:
+    image: amazon/aws-cli:2.22.35
+    depends_on: [elasticmq, dynamodb]
+    environment: *aws-local
+    volumes:
+      - ./scripts/data:/data:ro
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        set -e
+        until aws dynamodb list-tables >/dev/null 2>&1; do sleep 1; done
+        until aws sqs list-queues >/dev/null 2>&1; do sleep 1; done
+        aws sqs create-queue --queue-name concertpass-reservations.fifo \
+          --attributes FifoQueue=true,ContentBasedDeduplication=false,VisibilityTimeout=60
+        aws dynamodb create-table --table-name concertpass-events \
+          --attribute-definitions AttributeName=concert_id,AttributeType=S \
+          --key-schema AttributeName=concert_id,KeyType=HASH --billing-mode PAY_PER_REQUEST >/dev/null || true
+        for f in /data/concerts/*.json; do aws dynamodb put-item --table-name concertpass-events --item file://$$f; done
+        echo "init listo"
+
+  ticket-checkout:
+    build: ./ticket-checkout
+    ports: ["8081:8000"]
+
+  ticket-api:
+    build: ./ticket-api
+    depends_on:
+      postgres: {condition: service_healthy}
+      init: {condition: service_completed_successfully}
+    environment:
+      <<: [*aws-local, *db]
+    ports: ["8080:8000"]
+
+  ticket-worker:
+    build: ./ticket-worker
+    depends_on:
+      postgres: {condition: service_healthy}
+      init: {condition: service_completed_successfully}
+      ticket-api: {condition: service_started}
+    environment:
+      <<: [*aws-local, *db]
+      CHECKOUT_URL: http://ticket-checkout:8000

@@ -1,0 +1,14 @@
+# Configuración no sensible. Los valores ${...} los llena scripts/deploy-k8s.sh con envsubst.
+# Las credenciales de RDS van en el Secret rds-credentials, creado desde AWS Secrets Manager.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: concertpass-config
+  namespace: concertpass
+data:
+  AWS_REGION: "${AWS_REGION}"
+  SQS_QUEUE_URL: "${SQS_QUEUE_URL}"
+  DYNAMODB_TABLE: "${DYNAMODB_TABLE}"
+  CHECKOUT_URL: "http://ticket-checkout.concertpass.svc.cluster.local"
+  DB_SSLMODE: "require"
+  LOG_LEVEL: "INFO"

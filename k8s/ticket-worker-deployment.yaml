@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ticket-worker
+  namespace: concertpass
+  labels:
+    app: ticket-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ticket-worker
+  template:
+    metadata:
+      labels:
+        app: ticket-worker
+    spec:
+      # Da tiempo de terminar el long polling (20 s) y el mensaje en curso al escalar hacia abajo.
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: ticket-worker
+          image: ${ECR_REGISTRY}/concertpass/ticket-worker:${IMAGE_TAG}
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: concertpass-config
+            - secretRef:
+                name: rds-credentials
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi

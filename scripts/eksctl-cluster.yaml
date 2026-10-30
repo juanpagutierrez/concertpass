@@ -1,0 +1,38 @@
+# Plantilla del cluster. create-cluster.sh reemplaza las variables ${...} con envsubst.
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: ${CLUSTER_NAME}
+  region: ${AWS_REGION}
+
+managedNodeGroups:
+  - name: workers
+    instanceType: ${NODE_TYPE}
+    desiredCapacity: 2
+    minSize: 2
+    maxSize: 2
+    labels:
+      app: concertpass
+    iam:
+      # Permisos mínimos que necesitan los pods (vía el rol de los nodos) además de los default de EKS.
+      attachPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ConcertpassSqs
+            Effect: Allow
+            Action:
+              - sqs:SendMessage
+              - sqs:ReceiveMessage
+              - sqs:DeleteMessage
+              - sqs:ChangeMessageVisibility
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+            Resource: arn:aws:sqs:${AWS_REGION}:${AWS_ACCOUNT_ID}:${QUEUE_NAME}
+          - Sid: ConcertpassDynamoRead
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:Query
+              - dynamodb:Scan
+            Resource: arn:aws:dynamodb:${AWS_REGION}:${AWS_ACCOUNT_ID}:table/${DYNAMODB_TABLE}

@@ -1,0 +1,13 @@
+{
+  "concert_id": {"S": "bad-bunny-gdl"},
+  "name":       {"S": "Bad Bunny Debi tirar más fotos"},
+  "date":       {"S": "2026-11-15"},
+  "recinto":    {"S": "Estadio Akron, GDL"},
+  "capacity": {
+    "M": {
+      "floor":   {"N": "100"},
+      "vip":     {"N": "50"},
+      "general": {"N": "500"}
+    }
+  }
+}

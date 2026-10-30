@@ -1,0 +1,13 @@
+# Solo accesible dentro del cluster: ticket-worker la llama como si fuera la API de pagos.
+apiVersion: v1
+kind: Service
+metadata:
+  name: ticket-checkout
+  namespace: concertpass
+spec:
+  type: ClusterIP
+  selector:
+    app: ticket-checkout
+  ports:
+    - port: 80
+      targetPort: 8000
