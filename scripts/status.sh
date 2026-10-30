@@ -11,7 +11,7 @@ kubectl -n "$K8S_NAMESPACE" get pods,services -o wide
 log "Imágenes en ECR"
 for svc in "${SERVICES[@]}"; do
   aws ecr describe-images --repository-name "$ECR_PREFIX/$svc" \
-    --query "imageDetails[].[repositoryName, join(',', imageTags), imagePushedAt]" --output text
+    --query "imageDetails[?imageTags].[repositoryName, join(',', imageTags), imagePushedAt]" --output text
 done
 
 log "DynamoDB $DYNAMODB_TABLE"

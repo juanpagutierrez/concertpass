@@ -24,12 +24,13 @@ for svc in "${SERVICES[@]}"; do
   image="$REGISTRY/$ECR_PREFIX/$svc:$IMAGE_TAG"
   log "Build y push de $image"
   # Los nodos de EKS son x86_64; se fuerza la plataforma por si se construye desde una Mac ARM.
-  docker build --platform linux/amd64 -t "$image" "../$svc"
+  # --provenance=false: sin manifiestos de attestation, ECR muestra solo la imagen con su tag.
+  docker build --platform linux/amd64 --provenance=false -t "$image" "../$svc"
   docker push "$image"
 done
 
 log "Imágenes publicadas"
 for svc in "${SERVICES[@]}"; do
   aws ecr describe-images --repository-name "$ECR_PREFIX/$svc" \
-    --query 'imageDetails[].{repo:repositoryName,tags:join(`,`,imageTags),pushed:imagePushedAt}' --output table
+    --query 'imageDetails[?imageTags].{repo:repositoryName,tags:join(`,`,imageTags),pushed:imagePushedAt}' --output table
 done

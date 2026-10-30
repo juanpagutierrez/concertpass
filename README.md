@@ -155,7 +155,7 @@ capacidad 10. Con el lock siempre quedan 10 vendidos; sin el advisory lock (solo
 ### SQS FIFO y escalamiento
 
 - `MessageGroupId = concert_id` garantiza que las reservaciones de un concierto se procesan en orden de llegada, y `MessageDeduplicationId = reservation_id` evita duplicados.
-- Mientras un grupo tiene mensajes en vuelo, SQS no entrega más mensajes de ese grupo a otro consumidor. Con 3 workers y un solo concierto, casi todo lo procesa una réplica; las demás ayudan cuando hay varios conciertos a la vez. Los workers escalan **entre conciertos**, no dentro de uno.
+- Mientras un grupo tiene mensajes en vuelo, SQS no entrega más mensajes de ese grupo a otro consumidor. En la prueba en EKS con 3 workers y un solo concierto, cada réplica decidió 50 de las 150 reservaciones: se turnan los lotes, pero nunca procesan el mismo concierto en paralelo. Para un concierto, más workers no aumentan el paralelismo; sí lo hacen cuando hay varios conciertos a la vez.
 - `ticket-api` sí escala horizontalmente sin límite práctico: solo inserta y encola. El cuello de botella es la sección crítica de inventario (lock → suma → update), que por diseño se ejecuta de uno en uno por concierto y sección. Es el trade-off: se sacrifica concurrencia para garantizar consistencia.
 - El worker es idempotente: si un mensaje se entrega dos veces, o el checkout falla y se reintenta, revisa el estado actual antes de actuar. Si algo falla, el mensaje no se borra y SQS lo reentrega; tras 5 intentos va a la DLQ.
 

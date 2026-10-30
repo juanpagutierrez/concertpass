@@ -40,7 +40,8 @@ for d in ticket-checkout ticket-api ticket-worker; do
 done
 
 log "Abriendo el NodePort $NODE_PORT a tu IP pública"
-my_ip=$(curl -fsS https://checkip.amazonaws.com | tr -d '[:space:]')
+# HTTP simple: en Git Bash (schannel) el HTTPS puede fallar al revisar revocación de certificados.
+my_ip=$(curl -fsS http://checkip.amazonaws.com | tr -d '[:space:]')
 node_sgs=$(aws ec2 describe-instances \
   --filters "Name=tag:eks:cluster-name,Values=$CLUSTER_NAME" "Name=instance-state-name,Values=running" \
   --query 'Reservations[].Instances[].SecurityGroups[].GroupId' --output text | tr '\t' '\n' | sort -u)
