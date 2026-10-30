@@ -44,7 +44,7 @@ concertpass/
 ## Requisitos
 
 - Bash (Linux/macOS, o **Git Bash** en Windows), `aws` CLI v2, `eksctl`, `kubectl`, `docker`, `jq`, `envsubst` (gettext; viene con Git Bash) y `curl`.
-- Credenciales de AWS válidas (`aws sts get-caller-identity` debe funcionar). En AWS Academy copia las credenciales de la sesión a `~/.aws/credentials` cada vez que inicies el lab.
+- Credenciales de AWS válidas (`aws sts get-caller-identity` debe funcionar). En AWS Academy copia las credenciales de la sesión a `~/.aws/credentials` cada vez que inicies el lab (expiran a las ~4 h). Como ahí no se pueden crear roles de IAM, `create-cluster.sh` detecta el rol `LabRole` y lo usa para el cluster y los nodos (`scripts/eksctl-cluster-labrole.yaml`).
 - Docker Desktop corriendo, para construir las imágenes.
 
 Todos los scripts aceptan variables de entorno para cambiar valores por defecto (ver `scripts/config.sh`), p. ej. `AWS_REGION=us-west-2 ./setup.sh`. Por defecto se usa `us-east-1`.

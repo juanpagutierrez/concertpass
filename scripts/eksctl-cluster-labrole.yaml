@@ -1,0 +1,23 @@
+# Plantilla para AWS Academy (Learner Lab), donde no se pueden crear roles de IAM.
+# El cluster y los nodos usan el rol LabRole que ya existe en la cuenta (ya tiene permisos de
+# SQS, DynamoDB y ECR). create-cluster.sh la elige automáticamente si encuentra LabRole.
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: ${CLUSTER_NAME}
+  region: ${AWS_REGION}
+
+iam:
+  serviceRoleARN: ${LAB_ROLE_ARN}
+
+managedNodeGroups:
+  - name: workers
+    instanceType: ${NODE_TYPE}
+    desiredCapacity: 2
+    minSize: 2
+    maxSize: 2
+    labels:
+      app: concertpass
+    iam:
+      instanceRoleARN: ${LAB_ROLE_ARN}
